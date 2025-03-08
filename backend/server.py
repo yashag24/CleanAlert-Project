@@ -40,7 +40,7 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 # Security middleware
-CORS(app, origins=["http://localhost:3000"])  # Update with your frontend URL
+CORS(app, origins=["http://localhost:5173"])  # Update with your frontend URL
 Talisman(app, content_security_policy=None)  # Disable CSP for simplicity
 
 # Rate limiting

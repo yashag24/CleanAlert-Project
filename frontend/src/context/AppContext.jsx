@@ -23,6 +23,29 @@ export const AppProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Initialize WebSocket connection
+  useEffect(() => {
+    const newSocket = io("http://localhost:5000"); // Connect to the backend
+    setSocket(newSocket);
+
+    // Cleanup on unmount
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  // Sync notifications with local storage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+  }, [notifications]);
+
+  // Clean up preview URL
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
   // File validation
   const validateFile = (file) => {
     const validTypes = ["image/jpeg", "image/png", "image/jpg"];
@@ -34,7 +57,8 @@ export const AppProvider = ({ children }) => {
       });
       return false;
     }
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB limit
       toast({
         title: "File Too Large",
         description: "Maximum file size is 5MB",
@@ -67,7 +91,11 @@ export const AppProvider = ({ children }) => {
     setError(null);
 
     try {
-      const locationData = await getLocation();
+      const locationData = await getLocation().catch(() => ({
+        latitude: null,
+        longitude: null,
+      }));
+
       const formData = new FormData();
       formData.append("image", file);
       formData.append("latitude", locationData.latitude);
@@ -99,8 +127,14 @@ export const AppProvider = ({ children }) => {
           userId: user?.id,
         };
 
-        setNotifications(prev => [newDetection, ...prev]);
-        socket.emit("user_detection", newDetection);
+        setNotifications((prev) => [newDetection, ...prev]);
+
+        // Check if socket is initialized before emitting
+        if (socket) {
+          socket.emit("user_detection", newDetection);
+        } else {
+          console.error("WebSocket connection not established");
+        }
       }
     } catch (err) {
       setError(err.message);

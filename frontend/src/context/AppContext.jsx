@@ -12,16 +12,25 @@ export const AppProvider = ({ children }) => {
   const { getLocation } = useLocation();
   const { user } = useAuth();
   const [socket, setSocket] = useState(null);
-  const [notifications, setNotifications] = useState(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [notifications, setNotifications] = useState([]);
 
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Date formatting function
+  const formatDetectionDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -33,6 +42,22 @@ export const AppProvider = ({ children }) => {
       newSocket.disconnect();
     };
   }, []);
+
+  // Fetch notifications from backend on mount or user login
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/detections");
+        const data = await response.json();
+        setNotifications(data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      }
+    };
+
+    fetchNotifications();
+  }, [user]); // Refetch when user changes (e.g., logs in)
 
   // Sync notifications with local storage
   useEffect(() => {
@@ -86,50 +111,50 @@ export const AppProvider = ({ children }) => {
 
   const handleUpload = async () => {
     if (!file || loading) return;
-
+  
     setLoading(true);
     setError(null);
-
+  
     try {
       const locationData = await getLocation().catch(() => ({
         latitude: null,
         longitude: null,
       }));
-
+  
       const formData = new FormData();
       formData.append("image", file);
       formData.append("latitude", locationData.latitude);
       formData.append("longitude", locationData.longitude);
-
+  
       const response = await fetch("http://localhost:5000/upload", {
         method: "POST",
         body: formData,
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Upload failed");
       }
-
+  
       const data = await response.json();
       setResult(data);
-
+  
       if (data.prediction === "Garbage") {
         const newDetection = {
-          id: Date.now().toString(),
-          image_url: URL.createObjectURL(file),
+          id: data.id, // Use the ID returned by the backend
+          image_url: data.image_url, // Use the image URL returned by the backend
           latitude: locationData.latitude,
           longitude: locationData.longitude,
           confidence: data.confidence,
           status: "pending",
-          detected_at: new Date().toISOString(),
+          detected_at: data.timestamp,
           source: "user_upload",
           userId: user?.id,
         };
-
+  
         setNotifications((prev) => [newDetection, ...prev]);
-
-        // Check if socket is initialized before emitting
+  
+        // Emit the new detection via WebSocket
         if (socket) {
           socket.emit("user_detection", newDetection);
         } else {
@@ -148,6 +173,34 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Handle deletion of detections
+  const deleteDetection = async (detectionId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/detections/${detectionId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete detection");
+      }
+
+      // Remove the deleted detection from the state
+      setNotifications((prev) => prev.filter((n) => n.id !== detectionId));
+      toast({
+        title: "Detection Deleted",
+        description: "The detection has been successfully deleted.",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("Failed to delete detection:", error);
+      toast({
+        title: "Deletion Error",
+        description: "Failed to delete the detection.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -157,8 +210,10 @@ export const AppProvider = ({ children }) => {
         loading,
         error,
         notifications,
+        formatDetectionDate,
         handleFileChange,
         handleUpload,
+        deleteDetection, // Add this
         handleFileInputClick: () => {
           setFile(null);
           setPreview(null);

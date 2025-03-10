@@ -5,7 +5,6 @@ import {
   FileImage,
   AlertTriangle,
   CheckCircle,
-  Map as MapIcon,
   Users,
   PieChart,
 } from 'lucide-react';
@@ -19,24 +18,25 @@ import GarbageMap from '../components/NagarPalikaDashboard/Map';
 import Analytics from '../components/NagarPalikaDashboard/Analytics';
 
 const NagarpalikaGarbageDashboard = () => {
-  const { notifications } = useAppContext();
+  // Ensure notifications is always an array
+  const { notifications = [] } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [view, setView] = useState('list'); // 'list', 'map', or 'analytics'
 
+  // Filter notifications based on search term and active tab
   useEffect(() => {
     const filtered = notifications.filter((notification) => {
-      const matchesSearch = `${notification.latitude}, ${notification.longitude}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        activeTab === 'all' || notification.status === activeTab;
+      const coordinates = `${notification.latitude ?? 0}, ${notification.longitude ?? 0}`;
+      const matchesSearch = coordinates.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = activeTab === 'all' || notification.status === activeTab;
       return matchesSearch && matchesStatus;
     });
     setFilteredNotifications(filtered);
   }, [searchTerm, notifications, activeTab]);
 
+  // Calculate stats
   const stats = {
     total: notifications.length,
     pending: notifications.filter((n) => n.status === 'pending').length,
@@ -44,18 +44,19 @@ const NagarpalikaGarbageDashboard = () => {
     inProgress: notifications.filter((n) => n.status === 'in_progress').length,
   };
 
+  // Render the selected view
   const renderView = () => {
     switch (view) {
       case 'map':
-        return <GarbageMap detections={filteredNotifications} />;
+        return <GarbageMap detections={filteredNotifications ?? []} />;
       case 'analytics':
-        return <Analytics detections={notifications} />;
+        return <Analytics detections={notifications ?? []} />;
       default:
         return (
           <div className="space-y-4">
-            {filteredNotifications.map((notification) => (
+            {(filteredNotifications ?? []).map((notification) => (
               <motion.div
-                key={notification.id}
+                key={notification.id} // Use the correct unique ID from backend
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -150,53 +151,34 @@ const NagarpalikaGarbageDashboard = () => {
                 <Search className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
               </div>
               <div className="flex space-x-2">
-                <button
-                  onClick={() => setView('list')}
-                  className={`px-4 py-2 rounded-lg ${
-                    view === 'list'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700'
-                  }`}
-                >
-                  List
-                </button>
-                <button
-                  onClick={() => setView('map')}
-                  className={`px-4 py-2 rounded-lg ${
-                    view === 'map'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700'
-                  }`}
-                >
-                  Map
-                </button>
-                <button
-                  onClick={() => setView('analytics')}
-                  className={`px-4 py-2 rounded-lg ${
-                    view === 'analytics'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700'
-                  }`}
-                >
-                  Analytics
-                </button>
+                {['list', 'map', 'analytics'].map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setView(v)}
+                    className={`px-4 py-2 rounded-lg capitalize ${
+                      view === v
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700'
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
               </div>
               <div className="flex space-x-2">
-                {['all', 'pending', 'in_progress', 'completed'].map(
-                  (tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`px-4 py-2 rounded-lg capitalize ${
-                        activeTab === tab
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white text-gray-700'
-                      }`}
-                    >
-                      {tab.replace('_', ' ')}
-                    </button>
-                  )
-                )}
+                {['all', 'pending', 'in_progress', 'completed'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-lg capitalize ${
+                      activeTab === tab
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700'
+                    }`}
+                  >
+                    {tab.replace('_', ' ')}
+                  </button>
+                ))}
               </div>
             </div>
           </div>

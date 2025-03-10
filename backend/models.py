@@ -62,7 +62,7 @@ def authenticate_user(email, password):
     logger.warning(f"❌ Invalid password for: {email}")
     return None
 
-def create_detection_entry(prediction, confidence, latitude=None, longitude=None,location_name=None):
+def create_detection_entry(prediction, confidence, latitude=None, longitude=None,location_name=None,image_url=None):
     """Store detection result with location data."""
     detection = {
         "prediction": prediction,
@@ -70,7 +70,8 @@ def create_detection_entry(prediction, confidence, latitude=None, longitude=None
         "latitude": latitude,
         "longitude": longitude,
         "timestamp": datetime.utcnow().isoformat(),
-        "location_name":location_name  # Convert datetime to ISO format string
+        "location_name":location_name,  # Convert datetime to ISO format string
+        "image_url":image_url
     }
     result = detections_collection.insert_one(detection)
     

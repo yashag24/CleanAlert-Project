@@ -1,16 +1,16 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '../hooks/useToast';
 import { useNotifications } from '../hooks/useNotifications';
 import { useFileUpload } from '../hooks/useFileUpload';
 import { useAuth } from './AuthContext';
-import useLocation from '../hooks/useLocation'; // Correct import for default export
+import useLocation from '../hooks/useLocation';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { getLocation } = useLocation(); // Use the hook
+  const { getLocation } = useLocation();
 
   // Use custom hooks
   const { notifications, setNotifications, deleteDetection, socket } = useNotifications(user);
@@ -60,6 +60,31 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Handle status update
+  const updateDetectionStatus = async (detectionId, newStatus) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/detections/${detectionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      // Update the state
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === detectionId ? { ...n, status: newStatus } : n))
+      );
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      throw error;
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -73,6 +98,7 @@ export const AppProvider = ({ children }) => {
         handleFileChange,
         handleUpload: handleUploadWithToast,
         deleteDetection: handleDeleteDetection,
+        updateDetectionStatus,
         resetFileInput,
       }}
     >

@@ -2,18 +2,12 @@ import { Clock } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { useAppContext } from '../../context/AppContext';
 
-const NotificationCard = ({ notification }) => {
-  const { formatDetectionDate = (date) => date, updateDetectionStatus } = useAppContext();
-
-  const handleStatusUpdate = (newStatus) => {
-    if (notification?.id && updateDetectionStatus) {
-      updateDetectionStatus(notification.id, newStatus);
-    }
-  };
+const NotificationCard = ({ notification, onStatusUpdate, onDelete }) => {
+  const { formatDetectionDate = (date) => date } = useAppContext();
 
   // Fallback values for missing properties
   const confidence = (notification?.confidence ?? 0) * 100;
-  const imageUrl = notification?.image_url || 'https://e3.365dm.com/25/03/1600x900/skynews-india-delhi-garbage-mountain_6848989.jpg?20250307131130'; // Use backend-provided URL
+  const imageUrl = notification?.image_url || 'https://e3.365dm.com/25/03/1600x900/skynews-india-delhi-garbage-mountain_6848989.jpg?20250307131130';
   const detectedAt = notification?.detected_at || new Date().toISOString();
   const latitude = notification?.latitude?.toFixed(4) || '0.0000';
   const longitude = notification?.longitude?.toFixed(4) || '0.0000';
@@ -28,11 +22,11 @@ const NotificationCard = ({ notification }) => {
               AI Confidence: {confidence.toFixed(0)}%
             </div>
             <img
-              src={imageUrl} // Use backend-provided URL
+              src={imageUrl}
               alt={`Garbage at ${latitude}, ${longitude}`}
               className="rounded-lg w-full h-48 object-cover"
               onError={(e) => {
-                e.target.src = 'https://e3.365dm.com/25/03/1600x900/skynews-india-delhi-garbage-mountain_6848989.jpg?20250307131130'; // Fallback image
+                e.target.src = 'https://e3.365dm.com/25/03/1600x900/skynews-india-delhi-garbage-mountain_6848989.jpg?20250307131130';
               }}
             />
           </div>
@@ -69,16 +63,16 @@ const NotificationCard = ({ notification }) => {
 
             <div className="flex space-x-2">
               {notification?.status === 'pending' && (
-                <button 
-                  onClick={() => handleStatusUpdate('in_progress')}
+                <button
+                  onClick={() => onStatusUpdate(notification.id, 'in_progress')}
                   className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-lg hover:from-emerald-700 hover:to-blue-700"
                 >
                   Assign Cleanup Team
                 </button>
               )}
               {notification?.status === 'in_progress' && (
-                <button 
-                  onClick={() => handleStatusUpdate('completed')}
+                <button
+                  onClick={() => onStatusUpdate(notification.id, 'completed')}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   Mark as Complete
@@ -92,8 +86,11 @@ const NotificationCard = ({ notification }) => {
                   Cleanup Complete
                 </button>
               )}
-              <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                View Details
+              <button
+                onClick={() => onDelete(notification.id)}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Delete
               </button>
             </div>
           </div>

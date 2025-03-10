@@ -20,7 +20,7 @@ const Analytics = ({ detections }) => {
     return acc;
   }, {});
 
-  const chartData = Object.values(dailyData).sort((a, b) => 
+  const chartData = Object.values(dailyData).sort((a, b) =>
     new Date(a.date) - new Date(b.date)
   );
 
@@ -31,12 +31,12 @@ const Analytics = ({ detections }) => {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
+            <XAxis
+              dataKey="date"
               tickFormatter={(date) => format(new Date(date), 'MMM d')}
             />
             <YAxis />
-            <Tooltip 
+            <Tooltip
               labelFormatter={(date) => format(new Date(date), 'MMMM d, yyyy')}
             />
             <Area

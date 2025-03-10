@@ -12,7 +12,7 @@ export const AppProvider = ({ children }) => {
   const { getLocation } = useLocation();
   const { user } = useAuth();
   const [socket, setSocket] = useState(null);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]); // Initialize as empty array
 
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -49,10 +49,11 @@ export const AppProvider = ({ children }) => {
       try {
         const response = await fetch("http://localhost:5000/api/detections");
         const data = await response.json();
-        setNotifications(data);
+        setNotifications(Array.isArray(data) ? data : []); // Ensure data is an array
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
+        setNotifications([]); // Fallback to empty array on error
       }
     };
 

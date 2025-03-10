@@ -18,14 +18,12 @@ import GarbageMap from '../components/NagarPalikaDashboard/Map';
 import Analytics from '../components/NagarPalikaDashboard/Analytics';
 
 const NagarpalikaGarbageDashboard = () => {
-  // Ensure notifications is always an array
   const { notifications = [] } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [view, setView] = useState('list'); // 'list', 'map', or 'analytics'
 
-  // Filter notifications based on search term and active tab
   useEffect(() => {
     const filtered = notifications.filter((notification) => {
       const coordinates = `${notification.latitude ?? 0}, ${notification.longitude ?? 0}`;
@@ -36,7 +34,6 @@ const NagarpalikaGarbageDashboard = () => {
     setFilteredNotifications(filtered);
   }, [searchTerm, notifications, activeTab]);
 
-  // Calculate stats
   const stats = {
     total: notifications.length,
     pending: notifications.filter((n) => n.status === 'pending').length,
@@ -44,7 +41,6 @@ const NagarpalikaGarbageDashboard = () => {
     inProgress: notifications.filter((n) => n.status === 'in_progress').length,
   };
 
-  // Render the selected view
   const renderView = () => {
     switch (view) {
       case 'map':
@@ -56,7 +52,7 @@ const NagarpalikaGarbageDashboard = () => {
           <div className="space-y-4">
             {(filteredNotifications ?? []).map((notification) => (
               <motion.div
-                key={notification.id} // Use the correct unique ID from backend
+                key={notification.id} // ✅ Add a unique key here
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -153,7 +149,7 @@ const NagarpalikaGarbageDashboard = () => {
               <div className="flex space-x-2">
                 {['list', 'map', 'analytics'].map((v) => (
                   <button
-                    key={v}
+                    key={v} // ✅ Add a unique key here
                     onClick={() => setView(v)}
                     className={`px-4 py-2 rounded-lg capitalize ${
                       view === v
@@ -168,7 +164,7 @@ const NagarpalikaGarbageDashboard = () => {
               <div className="flex space-x-2">
                 {['all', 'pending', 'in_progress', 'completed'].map((tab) => (
                   <button
-                    key={tab}
+                    key={tab} // ✅ Add a unique key here
                     onClick={() => setActiveTab(tab)}
                     className={`px-4 py-2 rounded-lg capitalize ${
                       activeTab === tab

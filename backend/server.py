@@ -295,7 +295,8 @@ def get_detections():
     try:
         detections = list(db.detections.find({}))
         for detection in detections:
-            detection["_id"] = str(detection["_id"])  # Convert ObjectId to string
+            detection["id"] = str(detection["_id"])
+            del detection["_id"]  # Convert ObjectId to string
         return jsonify(detections), 200
     except Exception as e:
         logger.error(f"❌ Failed to fetch detections: {e}")

@@ -56,7 +56,7 @@ Talisman(app, content_security_policy=None)  # Disable CSP for simplicity
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["200 per day", "100 per hour"]
 )
 
 # WebSockets
@@ -197,7 +197,7 @@ def login():
     return jsonify({"error": "Invalid credentials"}), 401
 
 @app.route("/upload", methods=["POST"])
-@limiter.limit("10 per minute")
+@limiter.limit("100 per minute")
 def upload_image():
     """Handle image upload and run prediction."""
     if "image" not in request.files:

@@ -8,6 +8,6 @@ DB_NAME=garbage_detection
 MONGO_URI = 
 SECRETKEY=your-secret-key
 ALLOWED_ORIGINS=http://localhost:5173
-JWT_SECRET_KEY=mgoWLza-qH-IT7hHGXMGNT4obyN5cIiL7U2upWKvjMo
+JWT_SECRET_KEY=
 
 ```

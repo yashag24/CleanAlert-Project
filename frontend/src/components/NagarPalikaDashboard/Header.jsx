@@ -18,13 +18,13 @@ const Header = ({ handleImageUpload }) => {
         {/* Right Section (Upload & Logout) */}
         <div className="flex items-center space-x-4">
           {/* Upload Button */}
-          <button
+          {/* <button
             onClick={handleImageUpload}
             className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-lg hover:from-emerald-700 hover:to-blue-700 flex items-center"
           >
             <Upload className="h-4 w-4 mr-2" />
             Upload New Image
-          </button>
+          </button> */}
 
           {/* Logout Button */}
           <button

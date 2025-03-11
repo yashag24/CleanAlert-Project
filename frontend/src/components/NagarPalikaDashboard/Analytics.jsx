@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   AreaChart,
   Area,
@@ -7,37 +8,68 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const Analytics = ({ detections }) => {
-  // Process data for charts
-  const dailyData = detections.reduce((acc, detection) => {
-    const date = format(new Date(detection.detected_at), 'yyyy-MM-dd');
-    if (!acc[date]) {
-      acc[date] = { date, count: 0 };
-    }
-    acc[date].count++;
-    return acc;
-  }, {});
+  // Check if detections is null, undefined, or empty
+  if (!detections || detections.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">Detection Trends</h3>
+        <p className="text-gray-500">No detection data available.</p>
+      </div>
+    );
+  }
 
-  const chartData = Object.values(dailyData).sort((a, b) =>
-    new Date(a.date) - new Date(b.date)
-  );
+  // Process data for the chart
+  const processData = (detections) => {
+    const dailyData = detections.reduce((acc, detection) => {
+      if (!detection.timestamp || detection.prediction !== "Garbage") return acc; // Skip if timestamp is missing
+
+      const date = format(parseISO(detection.timestamp), 'yyyy-MM-dd');
+      if (!acc[date]) {
+        acc[date] = { date, count: 0 };
+      }
+      acc[date].count++;
+      return acc;
+    }, {});
+
+    return Object.values(dailyData).sort((a, b) =>
+      new Date(a.date) - new Date(b.date)
+    );
+  };
+
+  const chartData = processData(detections);
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <h3 className="text-lg font-semibold mb-4">Detection Trends</h3>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
+          <AreaChart
+            data={chartData}
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
             <XAxis
               dataKey="date"
-              tickFormatter={(date) => format(new Date(date), 'MMM d')}
+              tickFormatter={(date) => format(parseISO(date), 'MMM d')}
+              tick={{ fill: '#666', fontSize: 12 }}
+              axisLine={{ stroke: '#ccc' }}
             />
-            <YAxis />
+            <YAxis
+              tick={{ fill: '#666', fontSize: 12 }}
+              axisLine={{ stroke: '#ccc' }}
+            />
             <Tooltip
-              labelFormatter={(date) => format(new Date(date), 'MMMM d, yyyy')}
+              contentStyle={{
+                backgroundColor: '#fff',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              }}
+              labelFormatter={(date) => format(parseISO(date), 'MMMM d, yyyy')}
+              formatter={(value) => [`Detections: ${value}`, 'Count']}
             />
             <Area
               type="monotone"
@@ -45,6 +77,7 @@ const Analytics = ({ detections }) => {
               stroke="#4f46e5"
               fill="#818cf8"
               fillOpacity={0.3}
+              strokeWidth={2}
             />
           </AreaChart>
         </ResponsiveContainer>

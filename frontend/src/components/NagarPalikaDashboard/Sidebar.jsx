@@ -23,12 +23,12 @@ const Sidebar = () => {
           </div>
         </div>
 
-        <div className="px-6 py-3 hover:bg-blue-700 cursor-pointer mt-2 rounded-r-lg hover:bg-opacity-50">
+        {/* <div className="px-6 py-3 hover:bg-blue-700 cursor-pointer mt-2 rounded-r-lg hover:bg-opacity-50">
           <div className="flex items-center">
             <Upload className="h-5 w-5 mr-3" />
             <span>Manual Upload</span>
           </div>
-        </div>
+        </div> */}
 
         <div className="px-6 py-3 hover:bg-blue-700 cursor-pointer mt-2 rounded-r-lg hover:bg-opacity-50">
           <div className="flex items-center">

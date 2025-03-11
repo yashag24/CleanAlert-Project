@@ -11,7 +11,12 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const GarbageMap = ({ detections }) => {
+const GarbageMap = ({ detections, filterStatus }) => {
+  // Filter detections based on the selected status
+  const filteredDetections = filterStatus
+    ? detections.filter((detection) => detection.status === filterStatus)
+    : detections;
+
   return (
     <div className="h-[400px] rounded-lg overflow-hidden shadow-lg">
       <MapContainer
@@ -23,7 +28,7 @@ const GarbageMap = ({ detections }) => {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {detections.map((detection) => (
+        {filteredDetections.map((detection) => (
           <Marker
             key={detection.id}
             position={[detection.latitude, detection.longitude]}

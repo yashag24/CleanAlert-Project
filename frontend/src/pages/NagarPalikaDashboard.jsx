@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Search, FileImage, AlertTriangle, CheckCircle, Users, PieChart } from 'lucide-react';
-import { useAppContext } from '../context/AppContext';
-import Sidebar from '../components/NagarPalikaDashboard/Sidebar';
-import Header from '../components/NagarPalikaDashboard/Header';
-import StatsCard from '../components/NagarPalikaDashboard/StatsCard';
-import AISummary from '../components/NagarPalikaDashboard/AISummary';
-import NotificationCard from '../components/NagarPalikaDashboard/NotificationCard';
-import GarbageMap from '../components/NagarPalikaDashboard/Map';
-import Analytics from '../components/NagarPalikaDashboard/Analytics';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Search,
+  FileImage,
+  AlertTriangle,
+  CheckCircle,
+  Users,
+  PieChart,
+} from "lucide-react";
+import { useAppContext } from "../context/AppContext";
+import Sidebar from "../components/NagarPalikaDashboard/Sidebar";
+import Header from "../components/NagarPalikaDashboard/Header";
+import StatsCard from "../components/NagarPalikaDashboard/StatsCard";
+import AISummary from "../components/NagarPalikaDashboard/AISummary";
+import NotificationCard from "../components/NagarPalikaDashboard/NotificationCard";
+import GarbageMap from "../components/NagarPalikaDashboard/Map";
+import Analytics from "../components/NagarPalikaDashboard/Analytics";
 
 const NagarpalikaGarbageDashboard = () => {
   const {
@@ -17,35 +24,45 @@ const NagarpalikaGarbageDashboard = () => {
     handleFileChange,
     updateDetectionStatus,
     deleteDetection,
-    socket,
   } = useAppContext();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredNotifications, setFilteredNotifications] = useState([]);
-  const [activeTab, setActiveTab] = useState('all');
-  const [view, setView] = useState('list'); // 'list', 'map', or 'analytics'
+  const [activeTab, setActiveTab] = useState("all");
+  const [view, setView] = useState("list"); // 'list', 'map', or 'analytics'
 
   // Filter notifications based on search term and active tab
   useEffect(() => {
     const filtered = notifications.filter((notification) => {
-      const coordinates = `${notification.latitude ?? 0}, ${notification.longitude ?? 0}`;
-      const matchesSearch = coordinates.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = activeTab === 'all' || notification.status === activeTab;
-      return matchesSearch && matchesStatus;
+      // Ensure the notification is related to garbage
+      const isGarbageRelated = notification.prediction === "Garbage"; // Adjust this condition based on your data structure
+  
+      const coordinates = `${notification.latitude ?? 0}, ${
+        notification.longitude ?? 0
+      }`;
+      const matchesSearch = coordinates
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        activeTab === "all" || notification.status === activeTab;
+  
+      // Only include notifications that are garbage-related and match the search and status criteria
+      return isGarbageRelated && matchesSearch && matchesStatus;
     });
+  
     setFilteredNotifications(filtered);
   }, [searchTerm, notifications, activeTab]);
 
   // Calculate stats for the stats cards
   const stats = {
-    total: notifications.length,
-    pending: notifications.filter((n) => n.status === 'pending').length,
-    completed: notifications.filter((n) => n.status === 'completed').length,
-    inProgress: notifications.filter((n) => n.status === 'in_progress').length,
+    total: notifications.filter((n) => (n.prediction==="Garbage")).length,
+    pending: notifications.filter((n) => (n.prediction==="Garbage" && n.status === "pending")).length,
+    completed: notifications.filter((n) => (n.prediction==="Garbage" && n.status === "completed")).length,
+    inProgress: notifications.filter((n) => (n.prediction==="Garbage" && n.status === "in_progress")).length,
   };
 
   // Handle file upload
   const handleImageUpload = () => {
-    document.getElementById('file-input').click();
+    document.getElementById("file-input").click();
   };
 
   const handleFileInputChange = (e) => {
@@ -53,34 +70,12 @@ const NagarpalikaGarbageDashboard = () => {
     handleUpload(); // Trigger upload after file selection
   };
 
-  // Handle status update
-  const handleStatusUpdate = async (detectionId, newStatus) => {
-    try {
-      await updateDetectionStatus(detectionId, newStatus);
-    } catch (error) {
-      console.error('Failed to update status:', error);
-    }
-  };
-
-  // Handle real-time notifications via WebSocket
-  useEffect(() => {
-    if (socket) {
-      socket.on('new_detection', (newDetection) => {
-        setNotifications((prev) => [newDetection, ...prev]);
-      });
-    }
-
-    return () => {
-      if (socket) socket.off('new_detection');
-    };
-  }, [socket]);
-
   // Render the current view (list, map, or analytics)
   const renderView = () => {
     switch (view) {
-      case 'map':
+      case "map":
         return <GarbageMap detections={filteredNotifications ?? []} />;
-      case 'analytics':
+      case "analytics":
         return <Analytics detections={notifications ?? []} />;
       default:
         return (
@@ -94,7 +89,7 @@ const NagarpalikaGarbageDashboard = () => {
               >
                 <NotificationCard
                   notification={notification}
-                  onStatusUpdate={handleStatusUpdate}
+                  onStatusUpdate={updateDetectionStatus}
                   onDelete={deleteDetection}
                 />
               </motion.div>
@@ -188,7 +183,9 @@ const NagarpalikaGarbageDashboard = () => {
         {/* Garbage Reports Section */}
         <div className="px-6 pb-6">
           <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-4 md:space-y-0">
-            <h2 className="text-xl font-bold text-indigo-800">Garbage Reports</h2>
+            <h2 className="text-xl font-bold text-indigo-800">
+              Garbage Reports
+            </h2>
             <div className="flex flex-wrap gap-4">
               {/* Search Input */}
               <div className="relative">
@@ -204,12 +201,14 @@ const NagarpalikaGarbageDashboard = () => {
 
               {/* View Toggle Buttons */}
               <div className="flex space-x-2">
-                {['list', 'map', 'analytics'].map((v) => (
+                {["list", "map", "analytics"].map((v) => (
                   <button
                     key={v}
                     onClick={() => setView(v)}
                     className={`px-4 py-2 rounded-lg capitalize ${
-                      view === v ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
+                      view === v
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700"
                     }`}
                   >
                     {v}
@@ -219,15 +218,17 @@ const NagarpalikaGarbageDashboard = () => {
 
               {/* Filter Buttons */}
               <div className="flex space-x-2">
-                {['all', 'pending', 'in_progress', 'completed'].map((tab) => (
+                {["all", "pending", "in_progress", "completed"].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`px-4 py-2 rounded-lg capitalize ${
-                      activeTab === tab ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
+                      activeTab === tab
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700"
                     }`}
                   >
-                    {tab.replace('_', ' ')}
+                    {tab.replace("_", " ")}
                   </button>
                 ))}
               </div>

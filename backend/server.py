@@ -54,9 +54,7 @@ Talisman(app, content_security_policy=None)  # Disable CSP for simplicity
 
 # Rate limiting
 limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=["200 per day", "100 per hour"]
+    app=app, key_func=get_remote_address, default_limits=["200 per day", "100 per hour"]
 )
 
 # WebSockets
@@ -74,36 +72,46 @@ except Exception as e:
     logger.error(f"❌ Model loading failed: {e}")
     model = None
 
+
 # Helper Functions
 def get_location_name(lat, lon):
     """Get human-readable address using OpenStreetMap."""
     try:
         response = requests.get(
             f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}",
-            headers={'User-Agent': 'RoadsideGarbageDetection/1.0'},
-            timeout=10
+            headers={"User-Agent": "RoadsideGarbageDetection/1.0"},
+            timeout=10,
         )
         data = response.json()
-        address = data.get('address', {})
-        return ", ".join(filter(None, [
-            address.get('road'),
-            address.get('city'),
-            address.get('state'),
-            address.get('country')
-        ])) or "Unknown Location"
+        address = data.get("address", {})
+        return (
+            ", ".join(
+                filter(
+                    None,
+                    [
+                        address.get("road"),
+                        address.get("city"),
+                        address.get("state"),
+                        address.get("country"),
+                    ],
+                )
+            )
+            or "Unknown Location"
+        )
     except Exception as e:
         logger.error(f"❌ Location lookup failed: {str(e)}")
         return None
+
 
 def send_email(subject, body):
     """Send email notifications when garbage is detected."""
     try:
         msg = MIMEMultipart()
-        msg['From'] = FROM_EMAIL
-        msg['To'] = TO_EMAIL
-        msg['Subject'] = subject
-        msg['Date'] = email.utils.formatdate(localtime=True)
-        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        msg["From"] = FROM_EMAIL
+        msg["To"] = TO_EMAIL
+        msg["Subject"] = subject
+        msg["Date"] = email.utils.formatdate(localtime=True)
+        msg.attach(MIMEText(body, "plain", "utf-8"))
 
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
@@ -113,6 +121,7 @@ def send_email(subject, body):
         logger.info("✅ Email sent successfully")
     except Exception as e:
         logger.error(f"❌ Email sending failed: {e}")
+
 
 def preprocess_image(image):
     """Prepare image for TensorFlow model prediction."""
@@ -125,6 +134,7 @@ def preprocess_image(image):
         logger.error(f"❌ Image preprocessing failed: {e}")
         raise
 
+
 def validate_file(file):
     """Validate the uploaded file."""
     allowed_types = ["image/jpeg", "image/png", "image/jpg"]
@@ -136,31 +146,36 @@ def validate_file(file):
         return False, "File size exceeds the maximum limit of 5MB."
     return True, None
 
+
 # User Management Functions
 def create_user(email, password):
     """Create a new user in MongoDB."""
     if db.users.find_one({"email": email}):
         return None  # User already exists
-    
-    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    result = db.users.insert_one({
-        "email": email,
-        "password": hashed,
-        "created_at": datetime.now().isoformat(),
-        "role": "user"
-    })
+
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    result = db.users.insert_one(
+        {
+            "email": email,
+            "password": hashed,
+            "created_at": datetime.now().isoformat(),
+            "role": "user",
+        }
+    )
     return str(result.inserted_id)
+
 
 def authenticate_user(email, password):
     """Authenticate a user."""
     user = db.users.find_one({"email": email})
-    if user and bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+    if user and bcrypt.checkpw(password.encode("utf-8"), user["password"]):
         return {
             "id": str(user["_id"]),
             "email": user["email"],
-            "role": user.get("role", "user")
+            "role": user.get("role", "user"),
         }
     return None
+
 
 # Routes
 @app.route("/api/register", methods=["POST"])
@@ -178,6 +193,7 @@ def register():
         return jsonify({"message": "User registered successfully"}), 201
     return jsonify({"error": "User already exists"}), 409
 
+
 @app.route("/api/login", methods=["POST"])
 def login():
     """User authentication."""
@@ -187,14 +203,20 @@ def login():
 
     user = authenticate_user(email, password)
     if user:
-        return jsonify({
-            "user": {
-                "id": user["id"],
-                "email": user["email"],
-                "role": user["role"]
-            }
-        }), 200
+        return (
+            jsonify(
+                {
+                    "user": {
+                        "id": user["id"],
+                        "email": user["email"],
+                        "role": user["role"],
+                    }
+                }
+            ),
+            200,
+        )
     return jsonify({"error": "Invalid credentials"}), 401
+
 
 @app.route("/upload", methods=["POST"])
 @limiter.limit("100 per minute")
@@ -289,6 +311,7 @@ def upload_image():
         logger.error(f"❌ Processing error: {e}")
         return jsonify({"error": "Image processing failed"}), 500
 
+
 @app.route("/api/detections", methods=["GET"])
 def get_detections():
     """Fetch all detections."""
@@ -301,6 +324,7 @@ def get_detections():
     except Exception as e:
         logger.error(f"❌ Failed to fetch detections: {e}")
         return jsonify({"error": "Failed to fetch detections"}), 500
+
 
 @app.route("/api/detections/<detection_id>", methods=["DELETE"])
 def delete_detection(detection_id):
@@ -316,19 +340,57 @@ def delete_detection(detection_id):
         logger.error(f"❌ Failed to delete detection: {e}")
         return jsonify({"error": "Failed to delete detection"}), 500
 
+
 # Serve static files from the uploads directory
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+
+@app.route("/api/detections/<detection_id>/status", methods=["PATCH"])
+def update_detection_status(detection_id):
+    """Update the status of a detection."""
+    try:
+        data = request.json
+        new_status = data.get("status")
+
+        # Validate the new status
+        valid_statuses = ["pending", "in_progress", "completed"]
+        if new_status not in valid_statuses:
+            return jsonify({"error": "Invalid status"}), 400
+
+        # Update the status in MongoDB
+        result = db.detections.update_one(
+            {"_id": ObjectId(detection_id)}, {"$set": {"status": new_status}}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({"error": "Detection not found"}), 404
+
+        # Fetch the updated detection
+        updated_detection = db.detections.find_one({"_id": ObjectId(detection_id)})
+        updated_detection["id"] = str(updated_detection["_id"])
+        del updated_detection["_id"]
+
+        # Emit WebSocket event to notify clients
+        socketio.emit("status_update", updated_detection)
+
+        return jsonify(updated_detection), 200
+    except Exception as e:
+        logger.error(f"❌ Failed to update status: {e}")
+        return jsonify({"error": "Failed to update status"}), 500
+
 
 # WebSocket event handlers
 @socketio.on("connect")
 def handle_connect():
     logger.info("✅ Client connected via WebSocket")
 
+
 @socketio.on("disconnect")
 def handle_disconnect():
     logger.info("❌ Client disconnected")
+
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)

@@ -1,28 +1,29 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import MarkerClusterGroup from 'react-leaflet-cluster';
-import { format } from 'date-fns';
-import LoadingSpinner from '../userDashboard/LoadingSpinner'; // Import your spinner component
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import { format } from "date-fns";
+import LoadingSpinner from "../userDashboard/LoadingSpinner"; // Import your spinner component
 
 // Custom marker icons
 const createCustomIcon = (color) => {
   return new L.Icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    shadowSize: [41, 41],
   });
 };
 
 const statusIcons = {
-  pending: createCustomIcon('red'),
-  in_progress: createCustomIcon('blue'),
-  completed: createCustomIcon('green'),
-  default: createCustomIcon('grey')
+  pending: createCustomIcon("red"),
+  in_progress: createCustomIcon("blue"),
+  completed: createCustomIcon("green"),
+  default: createCustomIcon("grey"),
 };
 
 // Component to auto-zoom to markers
@@ -32,7 +33,7 @@ const AutoZoom = ({ detections }) => {
   useEffect(() => {
     if (detections.length > 0) {
       const group = new L.featureGroup(
-        detections.map(d => L.marker([d.latitude, d.longitude]))
+        detections.map((d) => L.marker([d.latitude, d.longitude]))
       );
       map.fitBounds(group.getBounds(), { padding: [50, 50] });
     }
@@ -44,14 +45,14 @@ const AutoZoom = ({ detections }) => {
 const MapControls = ({ activeStatus, setActiveStatus }) => (
   <div className="leaflet-top leaflet-right">
     <div className="leaflet-control leaflet-bar bg-white p-2 space-y-2">
-      {['all', 'pending', 'in_progress', 'completed'].map(status => (
+      {["all", "pending", "in_progress", "completed"].map((status) => (
         <button
           key={status}
-          onClick={() => setActiveStatus(status === 'all' ? null : status)}
+          onClick={() => setActiveStatus(status === "all" ? null : status)}
           className={`p-2 rounded-full w-8 h-8 flex items-center justify-center ${
-            activeStatus === status ? 'bg-blue-500 text-white' : 'bg-gray-100'
+            activeStatus === status ? "bg-blue-500 text-white" : "bg-gray-100"
           }`}
-          title={`Filter ${status.replace('_', ' ')}`}
+          title={`Filter ${status.replace("_", " ")}`}
         >
           {status[0].toUpperCase()}
         </button>
@@ -91,10 +92,11 @@ const GarbageMap = ({ detections }) => {
 
   // Validate coordinates and filter by status
   useEffect(() => {
-    const filtered = detections.filter(d => 
-      typeof d.latitude === 'number' && 
-      typeof d.longitude === 'number' &&
-      (!activeStatus || d.status === activeStatus)
+    const filtered = detections.filter(
+      (d) =>
+        typeof d.latitude === "number" &&
+        typeof d.longitude === "number" &&
+        (!activeStatus || d.status === activeStatus)
     );
     setValidDetections(filtered);
     setIsLoading(false);
@@ -102,8 +104,11 @@ const GarbageMap = ({ detections }) => {
 
   if (isLoading || !userLocation) {
     return (
-      <div className="h-[400px] flex items-center justify-center">
+      <div className="h-[400px] flex flex-col items-center justify-center bg-gradient-to-r from-emerald-400 via-blue-300 to-indigo-400 text-black border-2 border-indigo-400 shadow-xl rounded-xl p-6">
         <LoadingSpinner text="Loading map..." />
+        <p className="mt-2 text-lg font-semibold">
+          Fetching the latest map data...
+        </p>
       </div>
     );
   }
@@ -147,10 +152,15 @@ const GarbageMap = ({ detections }) => {
                     className="w-full h-32 object-cover rounded-t"
                   />
                   <div className="p-2 space-y-1">
-                    <p className="font-semibold capitalize">{detection.status.replace('_', ' ')}</p>
+                    <p className="font-semibold capitalize">
+                      {detection.status.replace("_", " ")}
+                    </p>
                     <p className="text-sm">{detection.location_name}</p>
                     <p className="text-xs text-gray-500">
-                      {format(new Date(detection.timestamp), 'MMM d, yyyy h:mm a')}
+                      {format(
+                        new Date(detection.timestamp),
+                        "MMM d, yyyy h:mm a"
+                      )}
                     </p>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Confidence:</span>
@@ -175,18 +185,21 @@ const GarbageMap = ({ detections }) => {
       {/* Map Legend */}
       <div className="leaflet-bottom leaflet-right">
         <div className="leaflet-control leaflet-bar bg-white p-3 space-y-2">
-          {Object.entries(statusIcons).map(([status, icon]) => (
-            status !== 'default' && (
-              <div key={status} className="flex items-center space-x-2">
-                <img 
-                  src={icon.options.iconUrl} 
-                  alt={status} 
-                  className="w-5 h-8 object-contain"
-                />
-                <span className="text-sm capitalize">{status.replace('_', ' ')}</span>
-              </div>
-            )
-          ))}
+          {Object.entries(statusIcons).map(
+            ([status, icon]) =>
+              status !== "default" && (
+                <div key={status} className="flex items-center space-x-2">
+                  <img
+                    src={icon.options.iconUrl}
+                    alt={status}
+                    className="w-5 h-8 object-contain"
+                  />
+                  <span className="text-sm capitalize">
+                    {status.replace("_", " ")}
+                  </span>
+                </div>
+              )
+          )}
         </div>
       </div>
 

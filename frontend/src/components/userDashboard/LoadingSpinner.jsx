@@ -1,6 +1,6 @@
 const LoadingSpinner = ({ text }) => (
   <span className="flex items-center">
-    <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+    <svg className="animate-spin h-5 w-5 mr-3 text-black" viewBox="0 0 24 24">
       <circle
         className="opacity-25"
         cx="12"

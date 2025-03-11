@@ -6,9 +6,10 @@ const NotificationCard = ({ notification, onStatusUpdate, onDelete }) => {
   const imageUrl =
     notification?.image_url ||
     "https://e3.365dm.com/25/03/1600x900/skynews-india-delhi-garbage-mountain_6848989.jpg?20250307131130";
-  const detectedAt = notification?.detected_at || new Date().toISOString();
+  const detectedAt = notification?.timestamp || new Date().toISOString();
   const latitude = notification?.latitude?.toFixed(4) || "0.0000";
   const longitude = notification?.longitude?.toFixed(4) || "0.0000";
+  const location = notification?.location_name || "Home";
   const source = notification?.source || "unknown";
   const detectionId = notification?.id?.slice(-4) || "N/A";
 
@@ -74,6 +75,12 @@ const NotificationCard = ({ notification, onStatusUpdate, onDelete }) => {
                 <p className="text-gray-500">Coordinates:</p>
                 <p className="font-medium">
                   {latitude}, {longitude}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Location:</p>
+                <p className="font-medium">
+                  {location}
                 </p>
               </div>
               <div>

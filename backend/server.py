@@ -32,7 +32,7 @@ EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 TO_EMAIL = os.getenv("TO_EMAIL")
 SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key-for-development-only")
 UPLOAD_FOLDER = "uploads"  # Directory to save uploaded images
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_URI = os.getenv("MONGO_URI")
 DATABASE_NAME = "garbage_detection"
 
 # Validate required environment variables

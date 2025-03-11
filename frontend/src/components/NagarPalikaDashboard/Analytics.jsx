@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 
-const Analytics = ({ detections }) => {
+const Analytics = ({ detections, activeTab }) => {
   // Check if detections is null, undefined, or empty
   if (!detections || detections.length === 0) {
     return (
@@ -24,7 +24,13 @@ const Analytics = ({ detections }) => {
   // Process data for the chart
   const processData = (detections) => {
     const dailyData = detections.reduce((acc, detection) => {
-      if (!detection.timestamp || detection.prediction !== "Garbage") return acc; // Skip if timestamp is missing
+      // Skip if timestamp is missing or prediction is not "Garbage"
+      if (!detection.timestamp || detection.prediction !== "Garbage") return acc;
+
+      // Filter based on activeTab
+      const matchesStatus =
+        activeTab === "all" || detection.status === activeTab;
+      if (!matchesStatus) return acc;
 
       const date = format(parseISO(detection.timestamp), 'yyyy-MM-dd');
       if (!acc[date]) {
@@ -34,9 +40,11 @@ const Analytics = ({ detections }) => {
       return acc;
     }, {});
 
-    return Object.values(dailyData).sort((a, b) =>
+    const result = Object.values(dailyData).sort((a, b) =>
       new Date(a.date) - new Date(b.date)
     );
+    console.log("Processed Data:", result); // Log the processed data
+    return result;
   };
 
   const chartData = processData(detections);

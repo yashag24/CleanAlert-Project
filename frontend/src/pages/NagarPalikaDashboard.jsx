@@ -76,7 +76,7 @@ const NagarpalikaGarbageDashboard = () => {
       case "map":
         return <GarbageMap detections={filteredNotifications ?? []} />;
       case "analytics":
-        return <Analytics detections={notifications ?? []} />;
+        return <Analytics detections={notifications ?? []} activeTab={activeTab} />;
       default:
         return (
           <div className="space-y-4">
